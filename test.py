@@ -1,3 +1,27 @@
+
+
+def convert_units(data, unit_in, unit_out):
+    if unit_in == "GPa" and unit_out == "MPa":
+        tmp1 = data*1000
+    if unit_in == "GPa" and unit_out == "Pa":
+        tmp1 = data*1000000
+    elif unit_in == "Pa" and unit_out == "MPa":
+        tmp1 = data/1000
+    elif unit_in == "Pa" and unit_out == "GPa":
+        tmp1 = data/1000000
+    elif unit_in == "cm" and unit_out == "mm":
+        tmp1 = data*10
+    elif unit_in == "m" and unit_out == "mm":
+        tmp1 = data*1000
+    elif unit_in == "mm" and unit_out == "m":
+        tmp1 = data/1000
+    elif unit_in == "cm" and unit_out == "m":
+        tmp1 = data/100
+    else :
+        tmp1 = data
+        print("did not convert units")
+    return tmp1
+
 class material:
     def __init__(self, E, V, v) -> None:
         self.E = E

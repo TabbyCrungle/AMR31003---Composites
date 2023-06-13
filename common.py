@@ -2,87 +2,93 @@ import numpy as np
 from numpy import matlib as mb
 from numpy import linalg as lg
 import matplotlib.pyplot as plt
+import json
 
+  
 class material:
     def __init__(self, E, V, v) -> None:
         self.E = E
         self.V = V
         self.v = v
-        pass
-    
-class lamina:
-    def __init__(self, E1, E2, G12, E) -> None:
-        self.E1 = E1
-        self.E2 = E2
-        self.G12 = G12
-        self.E = E
-        pass
-    
-class layercount:
-    def __init__(self, n1, n2, n3) -> None:
-        self.n1 = n1
-        self.n2 = n2
-        self.n3 = n3
-        pass
-    
-class layup:
-    def __init__(self, theta1, theta2, theta3) -> None:
-        self.theta1 = theta1
-        self.theta2 = theta2
-        self.theta3 = theta3
-        pass
-    
-class composite:
-    def __init__(self, Ec1, Ec2, Gc12) -> None:
-        self.Ec1 = Ec1
-        self.Ec2 = Ec2
-        self.Gc12 = Gc12
-        pass    
+        pass   
     
 def calc_g(Ex, vx):
-    tmp = Ex / 2 * (1 + vx)
+    tmp = (Ex / ( 2 * (1 + vx)))
     return tmp
 
 def calc_e1(Ef, Vf, Em, Vm):
-    tmp = Ef * Vf + Em * Vm
+    tmp = (Ef * Vf) + (Em * Vm)
     return tmp
 
 def calc_e2(Ef, Em, Vf, Vm):
-    tmp = (Ef * Em) / (Vf * Em + Vm * Vf)
+    tmp = (Ef * Em) / ((Vf * Em) + (Vm * Vf))
     return tmp 
 
 def calc_g12(Gf, Gm, Vf, Vm):
-    tmp = (Gf * Gm) / (Vf* Gm + Vm * Gf)
+    tmp = (Gf * Gm) / ((Vf* Gm) + (Vm * Gf))
     return tmp 
 
-def calc_ht(Xf, Xm, ht, Vf, Vm):
-    eta = (Xf/ Xm- 1)/(Xf / Xm + ht) 
-    tmp = Xm * (1 + (ht * eta * Vf))/1 - (eta * Vf)
+def calc_ht(Xf, Xm, ht, Vf):
+    eta = ((Xf/ Xm)- 1)/((Xf / Xm) + ht) 
+    tmp = (Xm * (1 + (ht * eta * Vf)))/(1 - (eta * Vf))
     return tmp 
 
-def calc_comp_matrix(E1, E2, G12):
+def calc_comp_matrix(E1, E2, G12, vf, vm, Vf, Vm):
     s11 = 1/E1
     s22 = 1/E2 
-    nu12 = (2 * G12)/E1 - 1
+    nu12 = (vf * Vf) + (vm * Vm)
+    nu12 = 0.32
     nu21 = (nu12 * E2)/ E1
-    s12 = -1 * nu21 / E2
+    s12 = -nu21 / E2
     s66 = 1/G12
     s = np.array([[s11, s12,0],[s12,s22,0],[0,0,s66]])
     return s
 
-fibre = material(200000, 0.6, 0.3)
-matrix = material(190000, 0.7, 0.1)
-ht = 1
+jf = "inputs.json"
 
+with open(jf) as data_file:
+    inputs = json.load(data_file)
+    
+try:
+    n_layer = int(inputs['parameters']['tlayers'])
+except (TypeError, KeyError):
+    print("could not read the total number of layers")
+
+fselect = 0
+mselect = 1
+
+try:
+    inputef = int(inputs['mech props'][fselect]['E'])
+    inputvf= inputs['mech props'][fselect]['volfract']
+    inputpf = inputs['mech props'][fselect]['poisson']
+except (TypeError, KeyError):
+    print("could not read fibre properties")    
+    
+try:
+    inputem = int(inputs['mech props'][mselect]['E'])
+    inputvm= inputs['mech props'][mselect]['volfract']
+    inputpm = inputs['mech props'][mselect]['poisson']
+except (TypeError, KeyError):
+    print("could not read matrix properties")   
+      
+fibre = material(inputef, inputvf, inputpf)
+matrix = material(inputem, inputvf, inputpf)
+
+try:
+    ht = inputs['constants']['halpin-tsai']
+except (TypeError, KeyError):
+    print("could not read constants") 
+    
 E1 = calc_e1(fibre.E,fibre.V,matrix.E,matrix.V) 
 E2 = calc_e2(fibre.E,matrix.E,fibre.V,matrix.V)
 Gf = calc_g(fibre.E,fibre.v)
 Gm = calc_g(matrix.E, matrix.v)
 G12 = calc_g12(Gf, Gm, fibre.V, matrix.V)
-E2HT = calc_ht(fibre.E, matrix.E, ht, fibre.V, matrix.V)
-G12HT = calc_ht(Gf, Gm, ht, fibre.V, matrix.V)
+G12 = 7
+E2HT = calc_ht(fibre.E, matrix.E, ht, fibre.V)
+G12HT = calc_ht(Gf, Gm, ht, fibre.V)
 
-s = np.mat(calc_comp_matrix(E1, E2, G12))
+s = np.mat(calc_comp_matrix(E1, E2HT, G12HT, fibre.v, matrix.v, fibre.V, matrix.V))
 q = lg.inv(s)
     
 def s_transformed(s, angle):
@@ -112,9 +118,11 @@ def q_transformed(q, angle):
     return q_transformed
 
 q_list = []
-n_layer = int(8)
 for j in range(0,n_layer):
-    angle = 15
+    try:
+        angle = int(inputs['layerlist'][j]['angle'])
+    except (TypeError, KeyError):
+        print("could not read the angle")
     t_s = s_transformed(s, angle)
     t_q = q_transformed(q, angle)
     q_list.append(t_q)
@@ -124,13 +132,24 @@ AO = np.mat(empty)
 BO = np.mat(empty)
 DO = np.mat(empty)
 
-t = float(0.2) 
-t_k = t/n_layer           
+try:
+    t = float(inputs['parameters']['tthickness']) 
+except (TypeError, KeyError):
+    print("could not read total thickness")
+    
+try:
+    t_k = int(inputs['layerlist'][0]['thickness'])
+except (TypeError, KeyError):
+    print("could not read the layer thickness")
 z_list = []
 tmp4 = 0
 tmp5 = -(n_layer)/2*t_k
 
 for i in range(0,(n_layer +1)): 
+    try:
+        t_k = int(inputs['layerlist'][i-1]['thickness'])
+    except (TypeError, KeyError):
+        print("could not read the layer thickness")
     tmp5 = tmp5 + tmp4
     tmp4 = t_k 
     z_list.append(tmp5)
@@ -146,16 +165,32 @@ A = np.around(AO,decimals = 3)
 B = np.around(BO,decimals = 3) 
 D = np.around(DO,decimals = 3) 
 
-a = lg.inv(A)
 
-E1C = 1/a[0,0]
-E2C = 1/a[1,1]
-G12C = 1/a[2,2]
-nu12c = -a[0,1]/a[0,0]
-nu21c = -a[0,1]/a[1,1]
+# a = lg.inv(A)
+
+# E1C = 1/a[0,0]
+# E2C = 1/a[1,1]
+# G12C = 1/a[2,2]
+# nu12c = -a[0,1]/a[0,0]
+# nu21c = -a[0,1]/a[1,1]
           
-#print(E1)
-#print(s)
-#print(q_list)
-print(a)
-print(E1C)
+
+print(E1)
+print(E2HT)
+
+
+print("Compliance matrix [S]:")
+print(s)
+print("Stiffness matrix [Q]:")
+print(q)
+# print("[A]:")
+# print(A)
+# print("[B]:")
+# print(B)
+# print("[D]:")
+# print(D)
+# print("[a] = [A]^-1:")
+# print(a)
+# print("Composite longitudinal modulus of elasticity:", E1C)
+# print("Composite transverse modulus of elasticity:", E2C)
+# print("Composite shear modulus:", G12C)

@@ -1,0 +1,112 @@
+{
+    "mech props": 
+        [
+                {
+                  "name" : "High Strength Carbon Fibre",
+                  "E" : 72,
+                  "Eunits" : "GPa",
+                  "volfract" : 0.55,
+                  "poisson" : 0
+                },
+                {
+                    "name" : "Epoxy",
+                    "E" : 2.4,
+                    "Eunits" : "GPa",
+                    "volfract" : 0,
+                    "poisson" : 0
+                }
+                
+        ],
+
+    "parameters" : 
+        {
+            "tlayers" : 8,
+            "tthickness" : 0.08,
+            "ttunits" : "m"
+        },
+
+    "layerlist" : 
+        [
+                {
+                    "fibremat" : 0,
+                    "matrixmat" : 1,
+                    "thickness" : 0.01,
+                    "tunits" : "m",
+                    "angle" : 30,
+                    "aunits" : "degrees"
+
+                },
+
+                {
+                    "fibremat" : 0,
+                    "matrixmat" : 1,
+                    "thickness" : 0.01,
+                    "tunits" : "m",
+                    "angle" : 30,
+                    "aunits" : "degrees"
+                },
+        
+                {
+                    "fibremat" : 0,
+                    "matrixmat" : 1,
+                    "thickness" : 0.01,
+                    "tunits" : "m",
+                    "angle" : 30,
+                    "aunits" : "degrees"
+                },
+            
+                {
+                    "fibremat" : 0,
+                    "matrixmat" : 1,
+                    "thickness" : 0.01,
+                    "tunits" : "m",
+                    "angle" : 30,
+                    "aunits" : "degrees"
+                },
+            
+                {
+                    "fibremat" : 0,
+                    "matrixmat" : 1,
+                    "thickness" : 0.01,
+                    "tunits" : "m",
+                    "angle" : 15,
+                    "aunits" : "degrees"
+                },
+            
+                {
+                    "fibremat" : 0,
+                    "matrixmat" : 1,
+                    "thickness" : 0.01,
+                    "tunits" : "m",
+                    "angle" : 15,
+                    "aunits" : "degrees"
+                },
+            
+                {
+                    "fibremat" : 0,
+                    "matrixmat" : 1,
+                    "thickness" : 0.01,
+                    "tunits" : "m",
+                    "angle" : -15,
+                    "aunits" : "degrees"
+                },
+            
+                {
+                    "fibremat" : 0,
+                    "matrixmat" : 1,
+                    "thickness" : 0.01,
+                    "tunits" : "m",
+                    "angle" : -15,
+                    "aunits" : "degrees"
+                }
+            
+        ],
+
+    "constants" : 
+        {
+            "halpin-tsai" : 1,
+            "fibre efficiency" : 1
+        }
+    
+    
+}
